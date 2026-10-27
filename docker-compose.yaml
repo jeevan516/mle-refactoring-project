@@ -1,0 +1,26 @@
+name: king-county
+
+# The API and its Postgres database, defined in api/docker-compose.yaml.
+# They read their settings from api/.env.
+include:
+  - api/docker-compose.yaml
+
+services:
+  # Trains the price model, prints its test scores, and exits.
+  # The model is saved to ./model/model.bin on your machine.
+  train:
+    build:
+      context: .
+      target: train
+    image: ${REGISTRY:-localhost:5000}/king-county-train:${TAG:-1.0}
+    volumes:
+      - ./model:/app/model
+    profiles: ["train"]
+
+  # Runs the king_county test suite and exits; a failing test fails the run.
+  test:
+    build:
+      context: .
+      target: test
+    image: ${REGISTRY:-localhost:5000}/king-county-test:${TAG:-1.0}
+    profiles: ["test"]

@@ -1,0 +1,11 @@
+# The images need the locked dependencies, the data, the package and its tests.
+# The API in api/ has its own Dockerfile and .dockerignore.
+**
+!pyproject.toml
+!uv.lock
+!.python-version
+!data/
+!king_county/
+!king_county/*.py
+!tests/
+!tests/*.py

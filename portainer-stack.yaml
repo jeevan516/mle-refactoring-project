@@ -1,0 +1,55 @@
+# Stack file for deploying the houses API and its database from Portainer
+# (Stacks -> Add stack -> Web editor or Upload).
+#
+# Unlike docker-compose.yaml it builds nothing: it runs the API image already
+# pushed to the registry. Build and push a new image first with:
+#   docker compose build app && docker compose push app
+#
+# Set these under "Environment variables" in Portainer:
+#   POSTGRES_PASSWORD  required
+#   API_PORT           host port for the API (default 8000)
+#   REGISTRY, TAG      where the API image comes from (default localhost:5000, 1.0)
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-houses}
+    # No published port: only the API talks to the database.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: ${REGISTRY:-localhost:5000}/king-county-api:${TAG:-1.0}
+    restart: unless-stopped
+    environment:
+      DB_CONN: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-houses}
+    ports:
+      # HOST:CONTAINER. Change the host port with the API_PORT variable only;
+      # the right-hand 8000 must stay, because the API listens on 8000 inside
+      # the container. For example API_PORT=8001 serves it on localhost:8001.
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:8000/', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
