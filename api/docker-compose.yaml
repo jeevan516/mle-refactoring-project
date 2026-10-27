@@ -3,6 +3,8 @@ name: king-county-api
 services:
   db:
     image: postgres:17
+    # Start again after Docker restarts, unless stopped on purpose.
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -21,6 +23,7 @@ services:
     build: .
     # Tag used when pushing to a registry; defaults to a local registry on port 5000.
     image: ${REGISTRY:-localhost:5000}/king-county-api:${TAG:-1.0}
+    restart: unless-stopped
     environment:
       DB_CONN: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     ports:
