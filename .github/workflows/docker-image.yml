@@ -1,0 +1,51 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build the test image
+      run: docker build --target test --tag king-county-test .
+
+    - name: Run the package tests in Docker
+      run: docker run --rm king-county-test
+
+    - name: Build the training image
+      run: docker build --target train --tag king-county-train .
+
+    - name: Start the API and database
+      working-directory: api
+      run: |
+        cp .env.example .env
+        docker compose up -d --build --wait
+
+    - name: Check the API responds
+      run: |
+        curl --fail http://localhost:8000/
+        curl --fail -X POST http://localhost:8000/houses \
+          -H "Content-Type: application/json" \
+          -d '{"bedrooms": 3, "bathrooms": 2.5, "sqft_living": 1800, "grade": 8, "zipcode": "98103"}'
+        curl --fail http://localhost:8000/houses
+
+    - name: Show API logs if something failed
+      if: failure()
+      working-directory: api
+      run: docker compose logs
+
+    - name: Stop the API
+      if: always()
+      working-directory: api
+      run: docker compose down --volumes
