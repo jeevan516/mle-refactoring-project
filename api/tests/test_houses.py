@@ -4,7 +4,14 @@ HOUSE = {"bedrooms": 3, "bathrooms": 2.5, "sqft_living": 1800, "grade": 8, "zipc
 
 
 def test_health(client):
-    assert client.get("/").json() == {"status": "ok"}
+    assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_index_serves_the_houses_page(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "<title>King County Houses</title>" in response.text
 
 
 def test_create_and_read_a_house(client):

@@ -34,7 +34,8 @@ jobs:
 
     - name: Check the API responds
       run: |
-        curl --fail http://localhost:8000/
+        curl --fail http://localhost:8000/health
+        curl --fail http://localhost:8000/ | grep -q "King County Houses"
         curl --fail -X POST http://localhost:8000/houses \
           -H "Content-Type: application/json" \
           -d '{"bedrooms": 3, "bathrooms": 2.5, "sqft_living": 1800, "grade": 8, "zipcode": "98103"}'

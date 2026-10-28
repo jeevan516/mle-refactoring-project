@@ -1,8 +1,10 @@
 """FastAPI app with create, read, update and delete endpoints for houses."""
 
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
+from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -21,6 +23,9 @@ Base.metadata.create_all(bind=engine)
 
 DatabaseSession = Annotated[Session, Depends(get_db)]
 
+# The browser page is one static file that calls the endpoints below.
+INDEX_HTML = (Path(__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
+
 
 def get_house_or_404(db: Session, house_id: int) -> models.House:
     """Return one house or raise the public not-found response."""
@@ -33,8 +38,14 @@ def get_house_or_404(db: Session, house_id: int) -> models.House:
     return house
 
 
-@app.get("/", tags=["health"])
-def index() -> dict[str, str]:
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def index() -> str:
+    """Serve the browser page for managing houses."""
+    return INDEX_HTML
+
+
+@app.get("/health", tags=["health"])
+def health() -> dict[str, str]:
     """Return a lightweight service status response."""
     return {"status": "ok"}
 

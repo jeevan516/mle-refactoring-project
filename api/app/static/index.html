@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>King County Houses</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M8 16 16 9l8 7v8h-5v-5h-6v5H8z' fill='white'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f4f4f1;
+      --surface: #fcfcfb;
+      --sunk: #f0efec;
+      --text: #0b0b0b;
+      --text-2: #52514e;
+      --muted: #898781;
+      --border: rgba(11, 11, 11, 0.10);
+      --border-strong: #c3c2b7;
+      --grid: #e1e0d9;
+      --shadow: 0 1px 2px rgba(11, 11, 11, 0.04), 0 4px 16px rgba(11, 11, 11, 0.04);
+      --accent: #2a78d6;
+      --accent-hover: #256abf;
+      --accent-ink: #1c5cab;
+      --danger: #d03b3b;
+      --ok: #0ca30c;
+      --radius: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --page: #0d0d0d;
+        --surface: #1a1a19;
+        --sunk: #232321;
+        --text: #f0efec;
+        --text-2: #c3c2b7;
+        --muted: #898781;
+        --border: rgba(255, 255, 255, 0.10);
+        --border-strong: #383835;
+        --grid: #2c2c2a;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --accent-ink: #86b6ef;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--page);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent-ink); }
+    .icon { flex-shrink: 0; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .bar { max-width: 1040px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .logo { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: #fff; }
+    .brand b { display: block; line-height: 1.2; }
+    .brand small { color: var(--muted); font-size: 0.8rem; }
+    .bar nav { display: flex; gap: 14px; font-size: 0.9rem; }
+    .bar nav a { color: var(--text-2); text-decoration: none; }
+    .bar nav a:hover { color: var(--text); }
+    .bar nav a { white-space: nowrap; }
+    @media (max-width: 560px) {
+      .brand small { display: none; }
+      .filter, .filter input { width: 100%; }
+    }
+
+    main { width: 100%; max-width: 1040px; margin: 0 auto; padding: 28px 16px 48px; flex: 1; }
+    .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+    h1 { font-size: 1.75rem; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+    .subtle { color: var(--text-2); margin: 4px 0 0; }
+
+    .button {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border: 1px solid transparent; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: background 0.15s;
+    }
+    .button:hover { background: var(--accent-hover); }
+    .button.ghost { background: transparent; color: var(--text); border-color: var(--border-strong); }
+    .button.ghost:hover { background: var(--sunk); }
+    .button.danger { background: var(--danger); }
+    .button:focus-visible, .icon-btn:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+    .stat span { display: block; color: var(--text-2); font-size: 0.85rem; }
+    .stat strong { display: block; font-size: 1.7rem; line-height: 1.2; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+    @media (max-width: 720px) { .stats { grid-template-columns: 1fr 1fr; gap: 10px; } }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; }
+    .toolbar h2 { font-size: 1rem; margin: 0; }
+    .filter { position: relative; display: flex; align-items: center; }
+    .filter .icon { position: absolute; left: 10px; color: var(--muted); pointer-events: none; }
+    .filter input { width: 210px; padding-left: 32px; background: var(--sunk); border-color: transparent; }
+    .filter input:focus { background: var(--surface); }
+
+    input, select {
+      padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: 8px;
+      font: inherit; background: var(--surface); color: var(--text);
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+    input[aria-invalid="true"] { border-color: var(--danger); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 16px; text-align: left; border-top: 1px solid var(--grid); white-space: nowrap; }
+    th { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:hover { background: var(--sunk); }
+    .id { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .zip { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .grade { display: inline-flex; align-items: center; gap: 8px; }
+    .grade-track { width: 52px; height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+    .grade-fill { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+    .actions { text-align: right; }
+    .icon-btn { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--text-2); cursor: pointer; }
+    .icon-btn:hover { background: var(--grid); color: var(--text); }
+    .icon-btn.danger:hover { color: var(--danger); }
+
+    .empty { text-align: center; padding: 44px 16px; border-top: 1px solid var(--grid); }
+    .empty b { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+    .empty p { color: var(--text-2); margin: 0 0 16px; }
+
+    dialog { width: min(480px, calc(100% - 32px)); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25); }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+    .dialog-body { padding: 22px 22px 18px; }
+    dialog h2 { margin: 0 0 4px; font-size: 1.2rem; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 6px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.wide { grid-column: 1 / -1; }
+    .field label { font-weight: 600; font-size: 0.88rem; }
+    .field label small { font-weight: 400; color: var(--muted); }
+    .form-error { color: var(--danger); font-size: 0.88rem; font-weight: 600; margin: 10px 0 0; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--border); background: var(--sunk); border-radius: 0 0 var(--radius) var(--radius); }
+    .confirm-text { margin: 8px 0 0; color: var(--text-2); }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px);
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; border-radius: 10px; background: var(--text); color: var(--surface);
+      font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: var(--danger); color: #fff; }
+
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 20px 16px; }
+    footer a { color: inherit; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">
+        <span class="logo"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span>
+        <span><b>King County Houses</b><small>Stored houses and their key features</small></span>
+      </div>
+      <nav><a href="/docs">API docs</a><a href="/health">Health</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="head">
+      <div>
+        <h1>Houses</h1>
+        <p class="subtle">Add, edit and remove houses. Every change is saved straight to the database.</p>
+      </div>
+      <button class="button" type="button" id="add-btn">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add house
+      </button>
+    </div>
+
+    <section class="stats" aria-label="Summary">
+      <div class="stat"><span>Houses</span><strong id="stat-count">–</strong></div>
+      <div class="stat"><span>Avg. living area</span><strong id="stat-sqft">–</strong></div>
+      <div class="stat"><span>Avg. grade</span><strong id="stat-grade">–</strong></div>
+      <div class="stat"><span>ZIP codes</span><strong id="stat-zips">–</strong></div>
+    </section>
+
+    <section class="card" aria-labelledby="list-title">
+      <div class="toolbar">
+        <h2 id="list-title">All houses</h2>
+        <form class="filter" id="filter-form" role="search">
+          <label for="zip-filter" class="visually-hidden">Filter by ZIP code</label>
+          <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="zip-filter" inputmode="numeric" maxlength="5" placeholder="Filter by ZIP, e.g. 98103" autocomplete="off">
+        </form>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">ZIP code</th>
+              <th scope="col" class="num">Bedrooms</th>
+              <th scope="col" class="num">Bathrooms</th>
+              <th scope="col" class="num">Living area</th>
+              <th scope="col">Grade</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empty" hidden>
+        <b id="empty-title">No houses yet</b>
+        <p id="empty-text">Add the first house to get started.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>King County Houses API · <a href="/docs">Interactive API docs</a></footer>
+
+  <dialog id="house-dialog" aria-labelledby="dialog-title">
+    <form id="house-form" novalidate>
+      <div class="dialog-body">
+        <h2 id="dialog-title">Add house</h2>
+        <p class="subtle" id="dialog-subtitle">All five fields are required.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="f-bedrooms">Bedrooms <small>0–30</small></label>
+            <input id="f-bedrooms" name="bedrooms" type="number" min="0" max="30" step="1" required>
+          </div>
+          <div class="field">
+            <label for="f-bathrooms">Bathrooms <small>steps of 0.25</small></label>
+            <input id="f-bathrooms" name="bathrooms" type="number" min="0" max="10" step="0.25" required>
+          </div>
+          <div class="field">
+            <label for="f-sqft">Living area <small>sq ft</small></label>
+            <input id="f-sqft" name="sqft_living" type="number" min="1" max="20000" step="1" required>
+          </div>
+          <div class="field">
+            <label for="f-grade">Grade <small>1–13</small></label>
+            <input id="f-grade" name="grade" type="number" min="1" max="13" step="1" required>
+          </div>
+          <div class="field wide">
+            <label for="f-zip">ZIP code <small>5 digits</small></label>
+            <input id="f-zip" name="zipcode" inputmode="numeric" maxlength="5" pattern="\d{5}" required placeholder="98103">
+          </div>
+        </div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="button ghost" type="button" data-close>Cancel</button>
+        <button class="button" type="submit" id="save-btn">Save house</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="delete-dialog" aria-labelledby="delete-title">
+    <div class="dialog-body">
+      <h2 id="delete-title">Delete house?</h2>
+      <p class="confirm-text" id="delete-text"></p>
+    </div>
+    <div class="dialog-actions">
+      <button class="button ghost" type="button" data-close>Cancel</button>
+      <button class="button danger" type="button" id="delete-confirm">Delete</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const FIELDS = ["bedrooms", "bathrooms", "sqft_living", "grade", "zipcode"];
+    const $ = (id) => document.getElementById(id);
+    const rows = $("rows");
+    const houseDialog = $("house-dialog");
+    const deleteDialog = $("delete-dialog");
+    const form = $("house-form");
+    let houses = [];
+    let editingId = null;
+    let deletingId = null;
+
+    const icons = {
+      edit: '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/></svg>',
+      trash: '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>',
+    };
+
+    function toast(message, isError = false) {
+      const el = $("toast");
+      el.textContent = message;
+      el.classList.toggle("error", isError);
+      el.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    // Turn FastAPI's error body into one readable sentence.
+    function errorMessage(body, fallback) {
+      if (!body || !body.detail) return fallback;
+      if (typeof body.detail === "string") return body.detail;
+      return body.detail
+        .map((e) => `${(e.loc || []).slice(-1)[0] || "value"}: ${e.msg}`)
+        .join(" · ");
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+      if (response.status === 204) return null;
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        const error = new Error(errorMessage(body, `Request failed (${response.status}).`));
+        error.body = body;
+        throw error;
+      }
+      return body;
+    }
+
+    const fmt = new Intl.NumberFormat("en-US");
+    const average = (key) => houses.reduce((sum, h) => sum + h[key], 0) / houses.length;
+
+    function renderStats() {
+      $("stat-count").textContent = fmt.format(houses.length);
+      $("stat-sqft").textContent = houses.length ? `${fmt.format(Math.round(average("sqft_living")))} ft²` : "–";
+      $("stat-grade").textContent = houses.length ? average("grade").toFixed(1) : "–";
+      $("stat-zips").textContent = fmt.format(new Set(houses.map((h) => h.zipcode)).size);
+    }
+
+    function cell(text, className) {
+      const td = document.createElement("td");
+      if (className) td.className = className;
+      td.textContent = text;
+      return td;
+    }
+
+    function render() {
+      const filter = $("zip-filter").value.trim();
+      const shown = filter ? houses.filter((h) => h.zipcode.startsWith(filter)) : houses;
+      rows.replaceChildren();
+
+      for (const h of shown) {
+        const tr = document.createElement("tr");
+        tr.append(
+          cell(`#${h.id}`, "id"),
+          cell(h.zipcode, "zip"),
+          cell(h.bedrooms, "num"),
+          cell(h.bathrooms, "num"),
+          cell(`${fmt.format(h.sqft_living)} ft²`, "num"),
+        );
+
+        const grade = document.createElement("td");
+        grade.innerHTML = '<span class="grade"><span class="grade-track"><span class="grade-fill"></span></span><span></span></span>';
+        grade.querySelector(".grade-fill").style.width = `${(h.grade / 13) * 100}%`;
+        grade.querySelector(".grade > span:last-child").textContent = `${h.grade} / 13`;
+        tr.append(grade);
+
+        const actions = document.createElement("td");
+        actions.className = "actions";
+        actions.innerHTML =
+          `<button class="icon-btn" type="button" data-edit="${h.id}" title="Edit house ${h.id}">${icons.edit}<span class="visually-hidden">Edit house ${h.id}</span></button>` +
+          `<button class="icon-btn danger" type="button" data-delete="${h.id}" title="Delete house ${h.id}">${icons.trash}<span class="visually-hidden">Delete house ${h.id}</span></button>`;
+        tr.append(actions);
+        rows.append(tr);
+      }
+
+      $("list-title").textContent = filter ? `${shown.length} of ${houses.length} houses` : "All houses";
+      $("empty").hidden = shown.length > 0;
+      $("empty-title").textContent = houses.length ? "No houses match this ZIP code" : "No houses yet";
+      $("empty-text").textContent = houses.length ? "Try another ZIP code or clear the filter." : "Add the first house to get started.";
+      renderStats();
+    }
+
+    async function load() {
+      try {
+        houses = await api("/houses");
+        render();
+      } catch (error) {
+        toast(`Could not load houses: ${error.message}`, true);
+      }
+    }
+
+    function openForm(house = null) {
+      editingId = house ? house.id : null;
+      form.reset();
+      $("form-error").hidden = true;
+      form.querySelectorAll("input").forEach((input) => input.removeAttribute("aria-invalid"));
+      $("dialog-title").textContent = house ? `Edit house #${house.id}` : "Add house";
+      $("dialog-subtitle").textContent = house ? "Update any field and save." : "All five fields are required.";
+      $("save-btn").textContent = house ? "Save changes" : "Save house";
+      if (house) FIELDS.forEach((f) => (form.elements[f].value = house[f]));
+      houseDialog.showModal();
+      form.elements.bedrooms.focus();
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = {
+        bedrooms: Number(form.elements.bedrooms.value),
+        bathrooms: Number(form.elements.bathrooms.value),
+        sqft_living: Number(form.elements.sqft_living.value),
+        grade: Number(form.elements.grade.value),
+        zipcode: form.elements.zipcode.value.trim(),
+      };
+      const missing = FIELDS.filter((f) => form.elements[f].value.trim() === "");
+      form.querySelectorAll("input").forEach((input) =>
+        input.toggleAttribute("aria-invalid", missing.includes(input.name)));
+      if (missing.length) {
+        $("form-error").textContent = "Please fill in every field.";
+        $("form-error").hidden = false;
+        return;
+      }
+
+      try {
+        const saved = editingId
+          ? await api(`/houses/${editingId}`, { method: "PUT", body: JSON.stringify(data) })
+          : await api("/houses", { method: "POST", body: JSON.stringify(data) });
+        houseDialog.close();
+        toast(editingId ? `House #${saved.id} updated` : `House #${saved.id} added`);
+        await load();
+      } catch (error) {
+        // Highlight the fields the API rejected.
+        const detail = error.body?.detail;
+        const bad = Array.isArray(detail) ? detail.map((e) => (e.loc || []).slice(-1)[0]) : [];
+        form.querySelectorAll("input").forEach((input) =>
+          input.toggleAttribute("aria-invalid", bad.includes(input.name)));
+        $("form-error").textContent = error.message;
+        $("form-error").hidden = false;
+      }
+    });
+
+    rows.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const id = Number(button.dataset.edit || button.dataset.delete);
+      const house = houses.find((h) => h.id === id);
+      if (!house) return;
+      if (button.dataset.edit) {
+        openForm(house);
+      } else {
+        deletingId = id;
+        $("delete-text").textContent =
+          `House #${id} in ${house.zipcode} (${house.bedrooms} bedrooms, ${fmt.format(house.sqft_living)} ft²) will be removed permanently.`;
+        deleteDialog.showModal();
+      }
+    });
+
+    $("delete-confirm").addEventListener("click", async () => {
+      try {
+        await api(`/houses/${deletingId}`, { method: "DELETE" });
+        deleteDialog.close();
+        toast(`House #${deletingId} deleted`);
+        await load();
+      } catch (error) {
+        deleteDialog.close();
+        toast(error.message, true);
+      }
+    });
+
+    document.querySelectorAll("[data-close]").forEach((button) =>
+      button.addEventListener("click", () => button.closest("dialog").close()));
+    $("add-btn").addEventListener("click", () => openForm());
+    $("zip-filter").addEventListener("input", render);
+    $("filter-form").addEventListener("submit", (event) => event.preventDefault());
+
+    load();
+  </script>
+</body>
+</html>

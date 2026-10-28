@@ -4,3 +4,4 @@
 !uv.lock
 !app/
 !app/*.py
+!app/static/

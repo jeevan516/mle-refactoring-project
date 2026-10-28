@@ -16,7 +16,8 @@ Invalid values are rejected with status `422` before anything reaches the databa
 
 | Method and path | Purpose | Success status |
 |---|---|---|
-| `GET /` | Health check | 200 |
+| `GET /` | Web page to list, filter, add, edit and delete houses | 200 |
+| `GET /health` | Health check | 200 |
 | `POST /houses` | Create a house | 201 |
 | `GET /houses` | List houses by id; optional `?zipcode=98103` filter | 200 |
 | `GET /houses/{house_id}` | Read one house | 200 |
@@ -34,7 +35,7 @@ cp .env.example .env
 docker compose up --build --wait
 ```
 
-Open <http://localhost:8000/docs> to try the endpoints. If port 8000 is already in use, set `API_PORT` in `.env` (for example `API_PORT=8001`) and use that port instead.
+Open <http://localhost:8000> to manage houses in the browser, or <http://localhost:8000/docs> to try the endpoints directly. If port 8000 is already in use, set `API_PORT` in `.env` (for example `API_PORT=8001`) and use that port instead.
 
 Postgres is not published on a host port; only the API connects to it, over the Compose network. Its data is kept in the `king-county-api_postgres-data` volume between runs.
 
@@ -64,5 +65,6 @@ uv run pytest
 | `app/models.py` | The `houses` table |
 | `app/schemas.py` | Request and response bodies, including the validation limits |
 | `app/main.py` | The endpoints |
+| `app/static/index.html` | The browser page served at `/`; plain HTML, CSS and JavaScript calling the endpoints |
 | `Dockerfile` | Image for the API, running as a non-root user |
 | `docker-compose.yaml` | Starts Postgres and the API, with health checks |
