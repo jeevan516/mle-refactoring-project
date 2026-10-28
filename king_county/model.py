@@ -98,6 +98,7 @@ def error_table(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> pd.
     return pd.DataFrame(
         {
             "id": X_test["id"],
+            "zipcode": X_test["zipcode"],
             "latitude": X_test["lat"],
             "longitude": X_test["long"],
             "price": y_test,
@@ -106,6 +107,32 @@ def error_table(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> pd.
             "price_difference_percent": ((predictions - y_test) / y_test * 100).round(2),
         }
     ).reset_index(drop=True)
+
+
+def error_by_zipcode(errors: pd.DataFrame) -> pd.DataFrame:
+    """Summarize an ``error_table`` per zipcode, one row per area for a map.
+
+    ``median_abs_percent`` is the typical size of an error there, and
+    ``bias_percent`` its direction: positive means the model overprices the area.
+    """
+    return (
+        errors.assign(
+            abs_error=errors["price_difference"].abs(),
+            abs_percent=errors["price_difference_percent"].abs(),
+        )
+        .groupby("zipcode")
+        .agg(
+            latitude=("latitude", "mean"),
+            longitude=("longitude", "mean"),
+            houses=("id", "size"),
+            median_price=("price", "median"),
+            mae=("abs_error", "mean"),
+            median_abs_percent=("abs_percent", "median"),
+            bias_percent=("price_difference_percent", "median"),
+        )
+        .round({"median_price": 0, "mae": 0, "median_abs_percent": 1, "bias_percent": 1})
+        .reset_index()
+    )
 
 
 def save_model(model: Pipeline, path: str | Path = MODEL_PATH) -> Path:

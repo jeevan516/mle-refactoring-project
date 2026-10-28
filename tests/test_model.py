@@ -3,6 +3,7 @@ import pytest
 
 from king_county.cleaning import load_data
 from king_county.model import (
+    error_by_zipcode,
     error_table,
     evaluate,
     load_model,
@@ -42,6 +43,20 @@ def test_error_table_has_one_row_per_test_house(split):
     assert (table["price_prediction"] - table["price"]).round(2).equals(
         table["price_difference"]
     )
+
+
+def test_error_by_zipcode_summarizes_each_area(split):
+    X_train, X_test, y_train, y_test = split
+    model = make_model_pipeline().fit(X_train, y_train)
+    table = error_table(model, X_test, y_test)
+    areas = error_by_zipcode(table)
+
+    assert areas["zipcode"].is_unique
+    assert areas["houses"].sum() == len(X_test)
+    one = areas.iloc[0]
+    rows = table[table["zipcode"] == one["zipcode"]]
+    assert one["mae"] == round(rows["price_difference"].abs().mean())
+    assert one["median_abs_percent"] == round(rows["price_difference_percent"].abs().median(), 1)
 
 
 def test_saved_model_predicts_the_same_after_loading(split, tmp_path):

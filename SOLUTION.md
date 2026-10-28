@@ -13,7 +13,7 @@ This file lists what was built for the [project description](project-description
 | FastAPI CRUD app with 5 features (stretch) | [api/](api/) | Done |
 | Dockerfile and Compose file, running in a container (stretch) | [api/Dockerfile](api/Dockerfile), [api/docker-compose.yaml](api/docker-compose.yaml) | Done |
 | Root Docker Compose for the API, training and tests; images pushed to a registry | [Dockerfile](Dockerfile), [docker-compose.yaml](docker-compose.yaml) | Done |
-| Tests (extra) | [tests/](tests/) (24 tests), [api/tests/](api/tests/) (13 tests) | Done |
+| Tests (extra) | [tests/](tests/) (25 tests), [api/tests/](api/tests/) (13 tests) | Done |
 
 ### Results Compared With the Notebook
 
