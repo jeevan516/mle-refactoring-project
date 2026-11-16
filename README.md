@@ -35,6 +35,7 @@ By the end of this repository, you should be able to:
 | [**docker-compose.yaml**](docker-compose.yaml) | Runs the API, database, training and tests together. |
 | [**pyproject.toml**](pyproject.toml) | Project configuration and dependencies. |
 | [**uv.lock**](uv.lock) | Dependency lock file. |
+| [**presentation**](presentation/) | Project slide deck: what it is about, results, and the three project questions. |
 
 ## Setup
 
