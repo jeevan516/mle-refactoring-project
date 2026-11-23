@@ -36,7 +36,7 @@ services:
       # HOST:CONTAINER. Change the host port with the API_PORT variable only;
       # the right-hand 8000 must stay, because the API listens on 8000 inside
       # the container. For example API_PORT=8001 serves it on localhost:8001.
-      - "${API_PORT:-8000}:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     healthcheck:
       test:
         - CMD
